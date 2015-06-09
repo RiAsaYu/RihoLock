@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">RihoLock</string>
+    <string name="device_admin_description">Change restriction.</string>
 
-    <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="pref_restrict_enable">restriction</string>
+    <string name="pref_restrict_enable_summary">operation restriction</string>
+    <string name="pref_restrict_time">restriction time</string>
+
+    <string name="restrict_10sec">10 sec</string>
+    <string name="restrict_30sec">30 sec</string>
+    <string name="restrict_60sec">60 sec</string>
+
 </resources>

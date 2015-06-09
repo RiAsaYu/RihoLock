@@ -1,38 +1,110 @@
 package gosuke.riasayu.riholock;
 
-import android.support.v7.app.ActionBarActivity;
+import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.preference.CheckBoxPreference;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.PreferenceActivity;
+import android.util.Log;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends PreferenceActivity {
+
+    private static final String TAG = "RihoLock";
+    static final int RESULT_ENABLE = 1;
+    private DevicePolicyManager mDevicePolicyManager;
+    private ComponentName mDeviceAdmin;
+
+    private CheckBoxPreference mRestrictionEnableCheckbox;
+    private ListPreference mRestrictionTimeList;
+    private boolean mAdminActivated = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        // Prepare to work with the DevicePolicyManager
+        mDevicePolicyManager = (DevicePolicyManager)getSystemService(Context.DEVICE_POLICY_SERVICE);
+        mDeviceAdmin = new ComponentName(this, AdminReceiver.class);
+
+        // Activate Device Administrator
+        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, mDeviceAdmin);
+        startActivityForResult(intent, RESULT_ENABLE);
+
+        // Initialize activity
+        addPreferencesFromResource(R.xml.preference);
+
+        // Enable checkbox
+        mRestrictionEnableCheckbox = (CheckBoxPreference) findPreference("restrict_enable");
+        mRestrictionEnableCheckbox.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object o) {
+                return setRestrictEnabled(((Boolean) o).booleanValue());
+            }
+        });
+
+        // restriction time listbox
+        mRestrictionTimeList = (ListPreference) findPreference("restrict_time");
+        String entry = (String) mRestrictionTimeList.getEntries()[mRestrictionTimeList.findIndexOfValue(mRestrictionTimeList.getValue())];
+        mRestrictionTimeList.setSummary(entry);
+
+        mRestrictionTimeList.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object o) {
+                setRestrictionTimeFromList();
+
+                String entry = (String) mRestrictionTimeList.getEntries()[mRestrictionTimeList.findIndexOfValue((String) o)];
+                //String summary = getString(R.string.pref_restrict_enable_summary, entry);
+                mRestrictionTimeList.setSummary(entry);
+                return true;
+            }
+        });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+    boolean setRestrictEnabled(boolean enable) {
+        if (enable) {
+            return setRestrictionTimeFromList();
+        } else if (mAdminActivated) {
+            Log.d(TAG, "UnLock restriction disabled");
+            //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, 10);	// 0 means no restriction(infinite)
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        return false;
+    }
+
+
+    private boolean setRestrictionTimeFromList() {
+        if (mAdminActivated) {
+            Log.d(TAG, "Lock delay enabled");
+            //int value = Integer.valueOf(mRestrictionTimeList.getValue());
+            mDevicePolicyManager.lockNow();
+            //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, value);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == RESULT_ENABLE) {
+            if (resultCode == Activity.RESULT_OK && mDevicePolicyManager.isAdminActive(mDeviceAdmin)) {
+                mAdminActivated = true;
+                Log.d(TAG, "SUCCESSFUL: Administration activation");
+            } else {
+                Log.d(TAG, "FAILURE: Administration activation");
+                mRestrictionEnableCheckbox.setChecked(false);
+            }
+            return;
+        }
+
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
