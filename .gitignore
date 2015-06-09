@@ -7,3 +7,6 @@
 /captures
 .idea
 
+.idea/gradle.xml
+.idea/misc.xml
+.idea/codeStyleSettings.xml
