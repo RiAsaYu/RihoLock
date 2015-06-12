@@ -4,6 +4,7 @@
         android:key="restrict_enable"
         android:title="@string/pref_restrict_enable"
         android:summary="@string/pref_restrict_enable_summary"
+        android:defaultValue="false"
         />
     <ListPreference
         android:key="restrict_time"

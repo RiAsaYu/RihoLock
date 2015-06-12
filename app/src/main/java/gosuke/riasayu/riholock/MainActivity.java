@@ -48,7 +48,9 @@ public class MainActivity extends PreferenceActivity {
         mRestrictionEnableCheckbox.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object o) {
-                return setRestrictEnabled(((Boolean) o).booleanValue());
+                setRestrictEnabled(((Boolean) o).booleanValue());
+                mDevicePolicyManager.lockNow();
+                return true;
             }
         });
 
@@ -71,7 +73,7 @@ public class MainActivity extends PreferenceActivity {
     boolean setRestrictEnabled(boolean enable) {
         if (enable) {
             setRestrictionStartDate();
-            return true; //setRestrictionTimeFromList();
+            return true;
         } else if (mAdminActivated) {
             Log.d(TAG, "UnLock restriction disabled");
             //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, 10);	// 0 means no restriction(infinite)
@@ -89,7 +91,7 @@ public class MainActivity extends PreferenceActivity {
         Calendar calendar = Calendar.getInstance();
         editor.putInt("start_date", calendar.get(Calendar.DAY_OF_YEAR));
         editor.commit();
-        Log.d(TAG, "Start Date:" +  pref.getInt("start_date", 0));
+        Log.d(TAG, "Start Date:" + pref.getInt("start_date", 0));
     }
 
     @Override
