@@ -82,9 +82,7 @@ public class MainActivity extends PreferenceActivity {
 
     private boolean setRestrictionTimeFromList() {
         if (mAdminActivated) {
-            Log.d(TAG, "Lock delay enabled");
             //int value = Integer.valueOf(mRestrictionTimeList.getValue());
-            mDevicePolicyManager.lockNow();
             //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, value);
             return true;
         } else {

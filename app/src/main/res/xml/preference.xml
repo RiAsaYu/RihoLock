@@ -11,5 +11,6 @@
         android:dependency="restrict_enable"
         android:entries="@array/restrict_entries"
         android:entryValues="@array/restrict_entry_values"
+        android:defaultValue="10"
         />
 </PreferenceScreen>
