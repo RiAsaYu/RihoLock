@@ -1,7 +1,5 @@
 package gosuke.riasayu.riholock;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -20,7 +18,6 @@ public class ScreenReceiver extends BroadcastReceiver {
         {
             Log.d(TAG, "Unlock!");
 
-            setResetAlarm(context);
             resetAccumulatedTime(context);
 
             if(IsRestrictedHour() == true )
@@ -28,8 +25,6 @@ public class ScreenReceiver extends BroadcastReceiver {
                 DevicePolicyManager devicePolicyManager = (DevicePolicyManager)context.getSystemService(Context.DEVICE_POLICY_SERVICE);
                 devicePolicyManager.lockNow();
             }
-           // Intent service = new Intent(context, RihoLockService.class);
-           // context.startService(service);
         }
     }
 
@@ -43,23 +38,6 @@ public class ScreenReceiver extends BroadcastReceiver {
             return true;
         }
         return false;
-    }
-
-    protected void setResetAlarm(Context context)
-    {
-        Intent i = new Intent(context, ResetReceiver.class); // ReceivedActivityを呼び出すインテントを作成
-        PendingIntent sender = PendingIntent.getBroadcast(context, 0, i, 0); // ブロードキャストを投げるPendingIntentの作成
-
-        Calendar calendar = Calendar.getInstance(); // Calendar取得
-        //calendar.setTimeInMillis(System.currentTimeMillis()); // 現在時刻を取得
-        //calendar.add(Calendar.SECOND, 15); // 現時刻より15秒後を設定
-        // 毎日24:00:00に累積使用時間をリセットする。
-        calendar.set(Calendar.HOUR_OF_DAY, 24);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-
-        AlarmManager am = (AlarmManager)context.getSystemService(context.ALARM_SERVICE); // AlramManager取得
-        am.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender); // AlramManagerにPendingIntentを登録
     }
 
     protected void resetAccumulatedTime(Context context)

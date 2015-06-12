@@ -43,11 +43,6 @@
             android:exported="true" >
         </service>
 
-        <receiver
-            android:name=".ResetReceiver"
-            android:enabled="true"
-            android:exported="true" >
-        </receiver>
     </application>
 
 </manifest>
