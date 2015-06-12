@@ -5,12 +5,15 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.util.Log;
+
+import java.util.Calendar;
 
 
 public class MainActivity extends PreferenceActivity {
@@ -57,8 +60,6 @@ public class MainActivity extends PreferenceActivity {
         mRestrictionTimeList.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object o) {
-                setRestrictionTimeFromList();
-
                 String entry = (String) mRestrictionTimeList.getEntries()[mRestrictionTimeList.findIndexOfValue((String) o)];
                 //String summary = getString(R.string.pref_restrict_enable_summary, entry);
                 mRestrictionTimeList.setSummary(entry);
@@ -69,7 +70,8 @@ public class MainActivity extends PreferenceActivity {
 
     boolean setRestrictEnabled(boolean enable) {
         if (enable) {
-            return setRestrictionTimeFromList();
+            setRestrictionStartDate();
+            return true; //setRestrictionTimeFromList();
         } else if (mAdminActivated) {
             Log.d(TAG, "UnLock restriction disabled");
             //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, 10);	// 0 means no restriction(infinite)
@@ -80,14 +82,14 @@ public class MainActivity extends PreferenceActivity {
     }
 
 
-    private boolean setRestrictionTimeFromList() {
-        if (mAdminActivated) {
-            //int value = Integer.valueOf(mRestrictionTimeList.getValue());
-            //mDevicePolicyManager.setMaximumTimeToLock(mDeviceAdmin, value);
-            return true;
-        } else {
-            return false;
-        }
+    private void setRestrictionStartDate()
+    {
+        SharedPreferences pref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        Calendar calendar = Calendar.getInstance();
+        editor.putInt("start_date", calendar.get(Calendar.DAY_OF_YEAR));
+        editor.commit();
+        Log.d(TAG, "Start Date:" +  pref.getInt("start_date", 0));
     }
 
     @Override

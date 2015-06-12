@@ -21,6 +21,7 @@ public class ScreenReceiver extends BroadcastReceiver {
             Log.d(TAG, "Unlock!");
 
             setResetAlarm(context);
+            resetAccumulatedTime(context);
 
             if(IsRestrictedHour() == true )
             {
@@ -59,5 +60,10 @@ public class ScreenReceiver extends BroadcastReceiver {
 
         AlarmManager am = (AlarmManager)context.getSystemService(context.ALARM_SERVICE); // AlramManager取得
         am.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), sender); // AlramManagerにPendingIntentを登録
+    }
+
+    protected void resetAccumulatedTime(Context context)
+    {
+
     }
 }
