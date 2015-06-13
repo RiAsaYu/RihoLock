@@ -82,10 +82,7 @@ public class MainActivity extends PreferenceActivity {
 
         return false;
     }
-
-
-    private void setRestrictionStartDate()
-    {
+    private void setRestrictionStartDate(){
         SharedPreferences pref = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         Calendar calendar = Calendar.getInstance();
@@ -106,7 +103,6 @@ public class MainActivity extends PreferenceActivity {
             }
             return;
         }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 }
