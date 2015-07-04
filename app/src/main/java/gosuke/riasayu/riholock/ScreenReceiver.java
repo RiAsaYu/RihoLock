@@ -34,6 +34,7 @@ public class ScreenReceiver extends BroadcastReceiver {
             Log.d(TAG, "Unlock!");
             mContext = context;
             mDevicePolicyManager = (DevicePolicyManager)context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+
             if(RihoLockPreference.getRestrictEnable(mContext) == false){
                 return;
             }
