@@ -14,7 +14,7 @@ import java.util.Calendar;
 public class ScreenReceiver extends BroadcastReceiver {
     static final String TAG = "RihoLock:ScreenReceiver";
 
-    public static final int DEFAULT_RESTRICTION_START_HOUR =20;
+    public static final int DEFAULT_RESTRICTION_START_HOUR =21;
     public static final int DEFAULT_RESTRICTION_END_HOUR   =7;
     public static final int ACCUMULATED_SEC_LIMIT = (60*60);
 
@@ -31,7 +31,7 @@ public class ScreenReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(Intent.ACTION_USER_PRESENT.equals(intent.getAction())){
-            Log.d(TAG, "Unlock!");
+            Log.d(TAG, "onReceive!");
             mContext = context;
             mDevicePolicyManager = (DevicePolicyManager)context.getSystemService(Context.DEVICE_POLICY_SERVICE);
 
@@ -45,6 +45,7 @@ public class ScreenReceiver extends BroadcastReceiver {
             }
             if(isRestrictedHour() == true ){
                 mDevicePolicyManager.lockNow();
+                Log.d(TAG, "LockNow!!");
             }
             else{
                 setRestrictionAlarm(mContext);
@@ -77,7 +78,7 @@ public class ScreenReceiver extends BroadcastReceiver {
         Calendar cal = Calendar.getInstance();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         Log.d(TAG, "Hour:" + hour);
-        if(hour > mRestrictionStartHour || hour < mRestrictionEndHour){
+        if(hour >= mRestrictionStartHour || hour < mRestrictionEndHour){
             return true;
         }
         return false;

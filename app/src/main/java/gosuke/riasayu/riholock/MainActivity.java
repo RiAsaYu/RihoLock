@@ -44,11 +44,13 @@ public class MainActivity extends PreferenceActivity {
         addPreferencesFromResource(R.xml.preference);
 
         // Enable checkbox
+        // CheckBoxを有効状態でDisableにしたのでonPreferenceChange()が呼ばれることはない。20150723
         mRestrictionEnableCheckbox = (CheckBoxPreference) findPreference("restrict_enable");
         mRestrictionEnableCheckbox.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object o) {
                 setRestrictEnabled(((Boolean) o).booleanValue());
+                // 設定の変更を反映させるため、一度Lockする。Unlockされた時点で設定が有効になる。
                 mDevicePolicyManager.lockNow();
                 return true;
             }
@@ -56,9 +58,12 @@ public class MainActivity extends PreferenceActivity {
 
         // restriction time listbox
         mRestrictionTimeList = (ListPreference) findPreference("restrict_time");
-        String entry = (String) mRestrictionTimeList.getEntries()[mRestrictionTimeList.findIndexOfValue(mRestrictionTimeList.getValue())];
+        //String entry = (String) mRestrictionTimeList.getEntries()[mRestrictionTimeList.findIndexOfValue(mRestrictionTimeList.getValue())];
+        String entry = String.valueOf(RihoLockPreference.getAccumulatedTime(this));
         mRestrictionTimeList.setSummary(entry);
 
+        // preference.xml内で android:dependency="restrict_enable"　となっており、
+        // CheckBoxと連動してDisableになるのでonPreferenceChange()が呼ばれることは無い。
         mRestrictionTimeList.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object o) {
