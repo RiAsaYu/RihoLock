@@ -7,6 +7,8 @@ import android.app.admin.DevicePolicyManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -22,7 +24,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
         Log.d(TAG, "onReceive!");
         RihoLockPreference.saveTotalAccumulatedTime(context);
-        if(RihoLockPreference.getElapsedSecUntilLock(context) < 0) {
+
+        if(RihoLockPreference.getElapsedSecUntilLock(context) < 0 ||
+                RihoLockPreference.isRestrictedHour() == true) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
             devicePolicyManager.lockNow();
             Log.d(TAG, "Screen Locked!");
@@ -31,22 +35,30 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     private void sendNotification(Context context) {
-        // Intent の作成
-/* Notificationをクリックしたときに発行されるIntent*/
-        Intent intent = new Intent(context, MainActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(
-                context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-/*        // LargeIcon の Bitmap を生成
-       Bitmap largeIcon = BitmapFactory.decodeResource(getResources(), R.drawable.ic_large);
-*/
+        // LargeIcon の Bitmap を生成
+       Bitmap largeIcon = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
+
         // NotificationBuilderを作成
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 context);
 
+        // Notificationをクリックしたときに発行されるIntent
+        builder.setContentIntent(getCommandPendingIntent(context, 1));
 
-        builder.setContentIntent(contentIntent);
-
+        /*
+        Set whether this is an ongoing notification.
+        Ongoing notifications differ from regular notifications in the following ways:
+        Ongoing notifications are sorted above the regular notifications in the notification panel.
+        Ongoing notifications do not have an 'X' close button, and are not affected by the "Clear all" button.
+         */
+        builder.setOngoing(true);
+        /*
+        Supply a PendingIntent to send when the notification is cleared by the user directly from the notification panel.
+        For example, this intent is sent when the user clicks the "Clear all" button, or the individual "X" buttons on notifications.
+        This intent is not sent when the application calls NotificationManager.cancel(int).
+         */
+        //builder.setDeleteIntent(getCommandPendingIntent(context,1));
 
         // ステータスバーに表示されるテキスト
         int remainTime = (RihoLockPreference.ACCUMULATED_SEC_LIMIT - RihoLockPreference.getAccumulatedTime(context)) / 60;
@@ -58,9 +70,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         builder.setContentTitle(context.getText(R.string.app_name));
         // Notificationを開いたときに表示されるサブタイトル
         builder.setContentText(context.getText(R.string.app_name));
-/*        // Notificationを開いたときに表示されるアイコン
+        // Notificationを開いたときに表示されるアイコン
         builder.setLargeIcon(largeIcon);
-*/
+
         builder.setNumber(remainTime);
 
         // 通知するタイミング
@@ -70,12 +82,21 @@ public class AlarmReceiver extends BroadcastReceiver {
                 | Notification.DEFAULT_VIBRATE
                 | Notification.DEFAULT_LIGHTS);
 */
-        // タップでキャンセルされる。
-        builder.setAutoCancel(true);
+        // タップでキャンセルされない。。
+        builder.setAutoCancel(false);
+
+//        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+//        PendingIntent pendingIntent = getCommandPendingIntent(context, 1 );
+//        builder.addAction(R.mipmap.ic_launcher, "COMMAND1", pendingIntent);
 
         // NotificationManagerを取得
         NotificationManager manager = (NotificationManager) context.getSystemService(Service.NOTIFICATION_SERVICE);
         // Notificationを作成して通知
         manager.notify(1, builder.build());
+    }
+    protected PendingIntent getCommandPendingIntent(Context context, int commandId){
+        Intent intent = new Intent(context, RihoLockService.class);
+        intent.putExtra("command", commandId);
+        return PendingIntent.getService(context, commandId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }

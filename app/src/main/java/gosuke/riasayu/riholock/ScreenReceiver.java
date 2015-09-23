@@ -14,14 +14,12 @@ import java.util.Calendar;
 public class ScreenReceiver extends BroadcastReceiver {
     static final String TAG = "RihoLock:ScreenReceiver";
 
-    private int mRestrictionStartHour;
-    private int mRestrictionEndHour;
+    private static final int ALARM_INTERVAL_SEC = 60;
+
     private Context mContext;
     private DevicePolicyManager mDevicePolicyManager;
 
     public ScreenReceiver(){
-        mRestrictionStartHour = RihoLockPreference.DEFAULT_RESTRICTION_START_HOUR;
-        mRestrictionEndHour = RihoLockPreference.DEFAULT_RESTRICTION_END_HOUR;
     }
 
     @Override
@@ -35,24 +33,25 @@ public class ScreenReceiver extends BroadcastReceiver {
             if(RihoLockPreference.getRestrictEnable(mContext) == false){
                 return;
             }
-           if(isRestrictionStartDateOver() == true)
+           if(isRestrictionStartDateOver() == true || RihoLockPreference.IsResetFlagEnable(context) == true)
             {
+                Log.d(TAG, "Reset!");
                 resetRestrictionStartDate();
                 resetAccumulatedTime();
             }
-            if(isRestrictedHour() == true ){
+            if(RihoLockPreference.isRestrictedHour() == true ){
                 mDevicePolicyManager.lockNow();
                 Log.d(TAG, "LockNow!!");
             }
             else{
-                setRepeatAlarm(context, RihoLockPreference.ALARM_INTERVAL_SEC);
+                setRepeatAlarm(context, ALARM_INTERVAL_SEC);
             }
             RihoLockPreference.saveUnlockedTime(mContext, System.currentTimeMillis());
             registerScreenOffReceiver(context);
         }
     }
 
-    protected boolean isRestrictionStartDateOver() {
+    private boolean isRestrictionStartDateOver() {
         int start_date =  RihoLockPreference.getStartDate(mContext);
         int today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
         Log.d(TAG, "Start Date:" +  start_date);
@@ -63,25 +62,15 @@ public class ScreenReceiver extends BroadcastReceiver {
         }
         return false;
     }
-    protected void resetRestrictionStartDate(){
+    private void resetRestrictionStartDate(){
         Calendar calendar = Calendar.getInstance();
         RihoLockPreference.saveStartDate(mContext, calendar.get(Calendar.DAY_OF_YEAR));
     }
-    protected void resetAccumulatedTime(){
+    private void resetAccumulatedTime(){
         RihoLockPreference.saveAccumulatedTime(mContext, 0);
     }
 
-    protected boolean isRestrictedHour(){
-        Calendar cal = Calendar.getInstance();
-        int hour = cal.get(Calendar.HOUR_OF_DAY);
-        Log.d(TAG, "Hour:" + hour);
-        if(hour >= mRestrictionStartHour || hour < mRestrictionEndHour){
-            return true;
-        }
-        return false;
-    }
-
-    protected void setAlarm(Context context, int sec) {
+    private void setAlarm(Context context, int sec) {
         Log.d(TAG, "setAlarm:" + sec);
 
         Calendar calendar = Calendar.getInstance();
@@ -91,7 +80,7 @@ public class ScreenReceiver extends BroadcastReceiver {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC, calendar.getTimeInMillis(), getAlarmPendingIntent(context));
     }
-    protected void setRepeatAlarm(Context context, int sec){
+    private void setRepeatAlarm(Context context, int sec){
         Log.d(TAG, "setRepeatAlarm:" + sec);
 
         Calendar calendar = Calendar.getInstance();
@@ -101,13 +90,12 @@ public class ScreenReceiver extends BroadcastReceiver {
         alarmManager.setRepeating(AlarmManager.RTC, calendar.getTimeInMillis(), sec*1000, getAlarmPendingIntent(context));
     }
     // PendingIntentはメンバーとして保持してもCancel時には無効になってしまうので、そのつど同じものを作成する。
-    protected PendingIntent getAlarmPendingIntent(Context context){
+    private PendingIntent getAlarmPendingIntent(Context context){
         Intent intent = new Intent(context, AlarmReceiver.class);
-       // Intent intent = new Intent(context, ScreenReceiver.class);
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
-    protected void registerScreenOffReceiver(Context context){
+    private void registerScreenOffReceiver(Context context){
         IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
         context.getApplicationContext().registerReceiver(
                 new BroadcastReceiver() {
@@ -120,7 +108,8 @@ public class ScreenReceiver extends BroadcastReceiver {
                         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                         alarmManager.cancel(getAlarmPendingIntent(context));
                         RihoLockPreference.saveTotalAccumulatedTime(context);
-                        RihoLockPreference.saveUnlockedTime(mContext, 0); // Unlockした時間を無効にする。
+                        RihoLockPreference.saveUnlockedTime(context, 0); // Unlockした時間を無効にする。
+                        RihoLockPreference.clearResetFlag(context);
 
                         //                    KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(context.KEYGUARD_SERVICE);
                         //                    Log.d(TAG, "Locked?:" + keyguardManager.inKeyguardRestrictedInputMode()); OFFになった時点ではLockされていなかった。

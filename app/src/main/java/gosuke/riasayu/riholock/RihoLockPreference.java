@@ -5,21 +5,54 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import java.util.Calendar;
+
 /**
  * Created by GOTO Hiroshi on 2015/06/13.
  */
 public class RihoLockPreference {
-    static final String TAG = "RihoLockPreference";
-    public static final int DEFAULT_RESTRICTION_START_HOUR =21;
-    public static final int DEFAULT_RESTRICTION_END_HOUR   =7;
+    private static final String TAG = "RihoLockPreference";
+    private static final int DEFAULT_RESTRICTION_START_HOUR =21;
+    private static final int DEFAULT_RESTRICTION_END_HOUR   =7;
+    private static final int MAX_RESET_COUNT = 10;
+
     public static final int ACCUMULATED_SEC_LIMIT = (60*60);
-    public static final int ALARM_INTERVAL_SEC = 10;
 
-    public static final String PREFERENCE_KEY_UNLOCKED_TIME = "unlocked_time";
-    public static final String PREFERENCE_KEY_RESTRICT_ENABLE = "restrict_enable";
-    public static final String PREFERENCE_KEY_START_DATE = "start_date";
-    public static final String PREFERENCE_KEY_ACCUMULATED_TIME = "accumulated_time";
+    private static final String PREFERENCE_KEY_UNLOCKED_TIME = "unlocked_time";
+    private static final String PREFERENCE_KEY_RESTRICT_ENABLE = "restrict_enable";
+    private static final String PREFERENCE_KEY_START_DATE = "start_date";
+    private static final String PREFERENCE_KEY_ACCUMULATED_TIME = "accumulated_time";
+    private static final String RESET_FLAG = "reset_flag";
 
+
+    /*
+    Lockをリセットするには以下の手順を行うこと。
+    １、SCREEN OFF状態でMAX_RESET_COUNT回Notificationのアイコンをクリックする。
+    ２、SCREEN ONする。
+    SCREEN ONからOFFに移るとRESET Flagがクリアされる。
+     */
+    static public boolean IsResetFlagEnable(Context context){
+       return  (getResetFlag(context) >= MAX_RESET_COUNT) ?  true :  false;
+    }
+    static public void setResetFlag(Context context){
+        SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
+        int value = sharedPreference.getInt(RESET_FLAG, 0) + 1;
+        saveResetFlag(context, value);
+        Log.d(TAG, "setResetFlag:" + value);
+    }
+    static public void clearResetFlag(Context context){
+        saveResetFlag(context, 0);
+    }
+    private  static int getResetFlag(Context context){
+        SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPreference.getInt(RESET_FLAG, 0);
+    }
+    private static void saveResetFlag(Context context, int value){
+        SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sharedPreference.edit();
+        editor.putInt(RESET_FLAG, value);
+        editor.commit();
+    }
 
     static public long getUnlockedTime(Context context){
         SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
@@ -68,5 +101,15 @@ public class RihoLockPreference {
     static public final int getElapsedSecUntilLock(Context context){
         int accumulated_time = RihoLockPreference.getAccumulatedTime(context);
         return (ACCUMULATED_SEC_LIMIT - accumulated_time);
+    }
+
+    static public boolean isRestrictedHour(){
+        Calendar cal = Calendar.getInstance();
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        Log.d(TAG, "Hour:" + hour);
+        if(hour >= DEFAULT_RESTRICTION_START_HOUR || hour < DEFAULT_RESTRICTION_END_HOUR){
+            return true;
+        }
+        return false;
     }
 }
