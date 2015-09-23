@@ -26,7 +26,7 @@ public class RihoLockPreference {
     }
     static public boolean getRestrictEnable(Context context){
         SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
-       return sharedPreference.getBoolean(PREFERENCE_KEY_RESTRICT_ENABLE, false);
+       return true;//sharedPreference.getBoolean(PREFERENCE_KEY_RESTRICT_ENABLE, false);
     }
     static public int getStartDate(Context context){
         SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
