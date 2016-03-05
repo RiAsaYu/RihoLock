@@ -13,8 +13,8 @@ import java.util.Calendar;
 public class RihoLockPreference {
     private static final String TAG = "RihoLockPreference";
     private static final int DEFAULT_RESTRICTION_START_HOUR =21;
-    private static final int DEFAULT_RESTRICTION_END_HOUR   =7;
-    private static final int MAX_RESET_COUNT = 10;
+    private static final int DEFAULT_RESTRICTION_END_HOUR   = 6;
+    private static final int MAX_RESET_COUNT = 7;
 
     public static final int ACCUMULATED_SEC_LIMIT = (60*60);
 
@@ -29,10 +29,11 @@ public class RihoLockPreference {
     Lockをリセットするには以下の手順を行うこと。
     １、SCREEN OFF状態でMAX_RESET_COUNT回Notificationのアイコンをクリックする。
     ２、SCREEN ONする。
-    SCREEN ONからOFFに移るとRESET Flagがクリアされる。
+    MAX_RESET_COUNT回ピッタリでSCREEN ONしないとRESET Flagはクリアされる。
+    SCREEN ONからOFFに移るとRESET Flagはクリアされる。
      */
     static public boolean IsResetFlagEnable(Context context){
-       return  (getResetFlag(context) >= MAX_RESET_COUNT) ?  true :  false;
+       return  (getResetFlag(context) == MAX_RESET_COUNT) ?  true :  false;
     }
     static public void setResetFlag(Context context){
         SharedPreferences sharedPreference = PreferenceManager.getDefaultSharedPreferences(context);
@@ -95,6 +96,10 @@ public class RihoLockPreference {
         int accumulated_sec = RihoLockPreference.getAccumulatedTime(context);
         int total_accumulated_sec =  (accumulated_sec + elapsed_sec);
         Log.d(TAG, "total_accumulated_sec:" + total_accumulated_sec);
+        if(total_accumulated_sec < 0){
+            Log.d(TAG,"total_accumulated_sec is invalid! Reset it to ACCUMULATED_SEC_LIMIT.");
+            total_accumulated_sec = ACCUMULATED_SEC_LIMIT;
+        }
         RihoLockPreference.saveAccumulatedTime(context, total_accumulated_sec);
         RihoLockPreference.saveUnlockedTime(context, current_ms);
     }
@@ -107,7 +112,7 @@ public class RihoLockPreference {
         Calendar cal = Calendar.getInstance();
         int hour = cal.get(Calendar.HOUR_OF_DAY);
         Log.d(TAG, "Hour:" + hour);
-        if(hour >= DEFAULT_RESTRICTION_START_HOUR || hour < DEFAULT_RESTRICTION_END_HOUR){
+        if(hour > DEFAULT_RESTRICTION_START_HOUR || hour < DEFAULT_RESTRICTION_END_HOUR){
             return true;
         }
         return false;

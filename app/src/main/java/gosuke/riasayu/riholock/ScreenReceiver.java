@@ -39,6 +39,8 @@ public class ScreenReceiver extends BroadcastReceiver {
                 resetRestrictionStartDate();
                 resetAccumulatedTime();
             }
+            RihoLockPreference.clearResetFlag(context);
+
             if(RihoLockPreference.isRestrictedHour() == true ){
                 mDevicePolicyManager.lockNow();
                 Log.d(TAG, "LockNow!!");

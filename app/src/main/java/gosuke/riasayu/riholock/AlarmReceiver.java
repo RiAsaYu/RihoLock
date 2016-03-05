@@ -25,7 +25,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive!");
         RihoLockPreference.saveTotalAccumulatedTime(context);
 
-        if(RihoLockPreference.getElapsedSecUntilLock(context) < 0 ||
+        if(RihoLockPreference.getElapsedSecUntilLock(context) <= 0 ||
                 RihoLockPreference.isRestrictedHour() == true) {
             DevicePolicyManager devicePolicyManager = (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
             devicePolicyManager.lockNow();
