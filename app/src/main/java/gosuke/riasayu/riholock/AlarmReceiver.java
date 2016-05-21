@@ -60,16 +60,21 @@ public class AlarmReceiver extends BroadcastReceiver {
          */
         //builder.setDeleteIntent(getCommandPendingIntent(context,1));
 
-        // ステータスバーに表示されるテキスト
-        int remainTime = (RihoLockPreference.ACCUMULATED_SEC_LIMIT - RihoLockPreference.getAccumulatedTime(context)) / 60;
-        builder.setTicker( String.valueOf(remainTime));
+        // Notificationが最初に現れた時にステータスバーに表示されるテキスト。残り時間
+        int remainTimeMs = (RihoLockPreference.ACCUMULATED_SEC_LIMIT - RihoLockPreference.getAccumulatedTime(context));
+        int remainTime =remainTimeMs / 60;
+        if ((remainTimeMs % 60) > 0){ // 切り上げ：59分59秒　→　60分
+            remainTime += 1;
+        }
+
+        builder.setTicker( String.valueOf(remainTime) + ":"+ String.valueOf(RihoLockPreference.getAccumulatedTime(context)));
         // アイコン
         builder.setSmallIcon(R.mipmap.ic_launcher);
 
         // Notificationを開いたときに表示されるタイトル
         builder.setContentTitle(context.getText(R.string.app_name));
-        // Notificationを開いたときに表示されるサブタイトル
-        builder.setContentText(context.getText(R.string.app_name));
+        // Notificationを開いたときに表示されるサブタイトル。デバック情報としてAccumulatedTimeを出す。
+        builder.setContentText(String.valueOf(RihoLockPreference.getAccumulatedTime(context)));
         // Notificationを開いたときに表示されるアイコン
         builder.setLargeIcon(largeIcon);
 

@@ -115,6 +115,12 @@ public class ScreenReceiver extends BroadcastReceiver {
 
                         //                    KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(context.KEYGUARD_SERVICE);
                         //                    Log.d(TAG, "Locked?:" + keyguardManager.inKeyguardRestrictedInputMode()); OFFになった時点ではLockされていなかった。
+
+                        /*
+                        onReceive()のたびにregisterReceiverされているので、処理が終わったらunregisterReceiverする。
+                        そうしないとonReceive()のたびに登録されてどんどんSCREEN_OFFのBroadCastReceiverが増えてしまう。
+                         */
+                        context.getApplicationContext().unregisterReceiver(this);
                     }
                 }, filter);
     }
